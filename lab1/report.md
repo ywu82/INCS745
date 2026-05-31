@@ -552,27 +552,26 @@ unauthorized data extraction can be detected.
 
 IV. **CONCLUSION**
 
-This lab demonstrated the complete penetration testing workflow from
-reconnaissance to exploitation. Through systematic use of Nmap scanning
-techniques, I identified 11 open services on the target server,
-including multiple SMB, MySQL, and web services running on both standard
-and non-standard ports. The Wireshark packet capture analysis revealed
-the differences between SYN stealth scans and TCP connect scans at the
-packet level. The NSE scripting engine proved valuable in enumerating
-SMB users and discovering a hidden flag embedded in a user profile
-attribute.
+This lab covered the full penetration testing process, beginning with
+reconnaissance and ending with exploitation. The Nmap scans identified
+11 open services on the target server, including SMB, MySQL, and web
+services on both standard and non-standard ports. Wireshark analysis
+showed the packet-level differences between SYN stealth scanning and TCP
+connect scanning. The Nmap Scripting Engine also supported the
+reconnaissance stage by enumerating SMB users and revealing a hidden flag
+stored in a user profile attribute.
 
-The exploitation phase focused on the MySQL authentication bypass
-vulnerability (CVE-2012-2122) on port 3307. Using Metasploit\'s
-mysql_authbypass_hashdump module, I successfully bypassed authentication
-after 130 attempts, obtained the root password hash, and cracked it
-using hashcat with the rockyou.txt wordlist. With root access to the
-MySQL database, I retrieved the admin user\'s password (\"nyit2025\")
-from the test database, completing the lab objective.
+The exploitation stage targeted the MySQL authentication bypass
+vulnerability, CVE-2012-2122, on port 3307. Metasploit's
+mysql_authbypass_hashdump module bypassed authentication after 130
+attempts and extracted the root password hash. The hash was then cracked
+with hashcat using the rockyou.txt wordlist. After root access to the
+MySQL database was obtained, the admin user's password, \"nyit2025\", was
+retrieved from the test database, satisfying the lab objective.
 
-This exercise highlights the importance of defense-in-depth: no single
-security measure is sufficient. Regular patching, strong passwords,
-network segmentation, access controls, and monitoring must all work
-together to protect against the type of multi-stage attack demonstrated
-in this lab.
+Overall, the lab demonstrates why defense-in-depth is necessary. A
+single control is not enough to stop a multi-stage attack. Patch
+management, strong password enforcement, network segmentation, access
+control, and monitoring need to operate together to reduce the likelihood
+and impact of this type of compromise.
 
