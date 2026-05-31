@@ -84,7 +84,8 @@ height="0.11610017497812773in"}
 *Figure 4: Host discovery scan showing 5 active hosts*
 
 To confirm which VirtualBox VM (10.0.9.3 or 10.0.9.4) is the target
-server, I performed a quick port scan on both hosts. The results clearly
+server, I ran a quick
+port scan against both 10.0.9.3 and 10.0.9.4. The results clearly
 show that 10.0.9.3 has all ports filtered while 10.0.9.4 has multiple
 open services (ssh, http, netbios-ssn, microsoft-ds, mysql), confirming
 10.0.9.4 as the target.
