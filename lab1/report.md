@@ -98,24 +98,27 @@ height="3.1418186789151354in"}
 
 2.  **Task 3**
 
-A default Nmap scan was performed against the confirmed target to
-identify commonly used open ports.
+Once 10.0.9.4 had been identified as the target, I started with a basic
+Nmap scan. This scan was used to get an initial view of the services that
+were exposed on commonly scanned ports.
 
 **Command:** sudo nmap 10.0.9.4
 
-The default scan checks the top 1000 most common ports and found 8 open
-TCP ports: 21 (ftp), 22 (ssh), 53 (domain), 80 (http), 139
-(netbios-ssn), 445 (microsoft-ds), 3306 (mysql), and 8080 (http-proxy).
-992 ports were closed. The scan completed in 0.45 seconds.
+With no extra port options, Nmap checks its default set of the top 1000
+ports. The result showed 8 open TCP ports on the target: 21 (ftp), 22
+(ssh), 53 (domain), 80 (http), 139 (netbios-ssn), 445 (microsoft-ds),
+3306 (mysql), and 8080 (http-proxy). The other 992 ports in the default
+set were closed. The scan took 0.45 seconds.
 
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 6: Default Nmap scan showing 8 open ports on target*
+*Figure 6: Initial Nmap scan showing 8 open ports on 10.0.9.4*
 
-Note: The default scan only checks the top 1000 ports and missed
-services running on non-standard ports (1139, 1445, 3307). A full port
-scan is needed for comprehensive reconnaissance.
+Note: This first scan did not cover every possible port. Because it only
+checked the top 1000 ports, services listening on 1139, 1445, and 3307
+were not included in the result. A scan of the full port range is needed
+to avoid missing those non-standard services.
 
 **Task 3.1: Comprehensive Port Scanning**
 
@@ -123,89 +126,99 @@ scan is needed for comprehensive reconnaissance.
 
 **Command:** sudo nmap -sS -p- -v 10.0.9.4
 
-The SYN scan (-sS) sends SYN packets without completing the TCP
-three-way handshake, making it faster and stealthier than a full connect
-scan. The -p- flag scans all 65,535 ports. The -v flag provides verbose
-output showing port discoveries in real-time.
+For the full-range scan, I used the SYN scan mode with -sS. In this
+mode, Nmap sends a SYN packet and does not finish the full TCP
+three-way handshake, which makes the scan faster and less obvious than a
+normal connect scan. The -p- argument expands the scan to all 65,535 TCP
+ports, while -v prints more detailed progress information as ports are
+found.
 
-The scan completed in 32.25 seconds, discovering 11 open TCP ports: 21
-(ftp), 22 (ssh), 53 (domain), 80 (http), 139 (netbios-ssn), 445
+This full scan finished in 32.25 seconds. It found 11 open TCP ports:
+21 (ftp), 22 (ssh), 53 (domain), 80 (http), 139 (netbios-ssn), 445
 (microsoft-ds), 1139 (cce3x), 1445 (proxima-lm), 3306 (mysql), 3307
-(opsession-prxy), and 8080 (http-proxy). Raw packets sent: 65,536
-(2.884MB), received: 65,536 (2.621MB).
+(opsession-prxy), and 8080 (http-proxy). During the scan, Nmap sent
+65,536 raw packets, totaling 2.884MB, and received 65,536 packets,
+totaling 2.621MB.
 
-Three additional ports were discovered compared to the default scan:
-1139 (possibly additional SMB service), 1445 (possibly additional SMB
-service), and 3307 (second MySQL instance). This demonstrates the
-importance of full-port scanning.
-
-{width="6.4in"
-height="3.1418186789151354in"}
-
-*Figure 7: SYN scan in progress showing port discoveries*
+The full scan revealed three ports that were absent from the default
+scan: 1139, 1445, and 3307. Ports 1139 and 1445 may indicate additional
+SMB-related services, and port 3307 appears to be another MySQL
+instance. This difference shows that relying only on the default scan can
+miss useful reconnaissance information.
 
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 8: SYN scan results - 11 open ports discovered*
+*Figure 7: Full SYN scan while new open ports are being reported*
+
+{width="6.4in"
+height="3.1418186789151354in"}
+
+*Figure 8: Full SYN scan output listing 11 open ports*
 
 **TCP Connect Scan (Ports 1-20)**
 
 **Command:** sudo nmap -sT -p 1-20 -v 10.0.9.4
 
-The TCP connect scan (-sT) completes the full three-way handshake (SYN,
-SYN-ACK, ACK) for each port. This scan is more reliable but slower and
-more easily detected by IDS. All 20 ports (1-20) were closed, which is
-expected since the target services run on higher port numbers. The scan
-completed in 0.16 seconds.
+I also tested a TCP connect scan with -sT against ports 1-20. Unlike the
+SYN scan, this method completes the connection process with SYN,
+SYN-ACK, and ACK packets for each checked port. It is dependable, but it
+takes longer and is more likely to appear in IDS logs. The scan reported
+that all 20 ports in this range were closed, which matches the earlier
+results because the visible services are on higher port numbers. The
+runtime was 0.16 seconds.
 
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 9: TCP Connect scan command and results (ports 1-10)*
+*Figure 9: TCP Connect scan output for ports 1-10*
 
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 10: TCP Connect scan results (ports 11-20, all closed)*
+*Figure 10: TCP Connect scan output for ports 11-20, all closed*
 
 **Wireshark Packet Capture Analysis**
 
-Using Wireshark with the display filter \"port == 80 && ip.addr ==
-10.0.9.4\", I analyzed the network behavior of the SYN scan. The capture
-clearly shows the SYN scan pattern:
+To review the packet-level behavior, I opened the capture in Wireshark
+and applied the filter \"port == 80 && ip.addr == 10.0.9.4\". This made
+it easier to focus on traffic between the Student VM and the target
+during the scan.
 
-SYN Scan pattern: \[SYN\] �?\[SYN, ACK\] �?\[RST\] - The scanner sends a
-SYN packet, receives a SYN-ACK (indicating the port is open), and
-immediately sends RST to tear down the connection without completing the
-handshake. This is why it is called a \"half-open\" or \"stealth\" scan.
+SYN Scan pattern: \[SYN\] -> \[SYN, ACK\] -> \[RST\] - For the SYN scan,
+the Student VM sends a SYN packet to the target. When the target replies
+with SYN-ACK, the port is shown as open. Instead of completing the
+handshake, the scanner sends RST right away. This incomplete connection
+is why the method is known as a \"half-open\" or \"stealth\" scan.
 
-TCP Connect Scan pattern: \[SYN\] �?\[SYN, ACK\] �?\[ACK\] �?\[RST\] -
-The scanner completes the full three-way handshake before sending RST.
-This creates a full connection log that is easily detected by firewalls
-and IDS.
+TCP Connect Scan pattern: \[SYN\] -> \[SYN, ACK\] -> \[ACK\] -> \[RST\]
+- In the TCP connect scan, the scanner sends the ACK packet and fully
+establishes the TCP connection before resetting it. Since a complete
+connection is made, firewalls and IDS systems can detect this scan more
+easily.
 
-The Wireshark capture also shows some HTTP traffic from 91.189.91.98,
-which is unrelated Ubuntu update traffic from the target server. The
-bottom pane shows the selected RST packet details: 54 bytes on wire,
-source 10.0.9.5 to destination 10.0.9.4, TCP port 43263 to port 80.
+The capture also contained HTTP traffic from 91.189.91.98. That traffic
+was not part of the scan; it appears to be Ubuntu update traffic from the
+target server. For the selected RST packet, Wireshark shows 54 bytes on
+wire. The packet was sent from 10.0.9.5 to 10.0.9.4, using TCP source
+port 43263 and destination port 80.
 
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 11: Wireshark capture showing SYN scan packet pattern (SYN \>
-SYN-ACK \> RST)*
+*Figure 11: Wireshark view of the SYN, SYN-ACK, and RST packet sequence*
 
 **Task 3.2: Focused Scanning (OS and Service Detection)**
 
 **Command:** sudo nmap -p 1-200 -O -sV -v -oN xiaoxiao_nmap_33.txt
 10.0.9.4
 
-This scan combines OS detection (-O), service version detection (-sV),
-verbose output (-v), and saves results to a file (-oN). It targets ports
-1-200 to focus on the common service range.
+The next scan narrowed the port range to 1-200 and added options for
+more detailed identification. The -O option attempts OS detection, -sV
+checks service versions, and -v provides verbose output. The -oN option
+saves the normal scan output into the file xiaoxiao_nmap_33.txt.
 
-Service version results:
+The service version output showed the following results:
 
 Port 21/tcp - vsftpd 3.0.5 (FTP server)
 
@@ -217,30 +230,32 @@ Port 80/tcp - Apache httpd 2.4.52 (Ubuntu) (Web server)
 
 Port 139/tcp - Samba smbd 3.X - 4.X (workgroup: WORKGROUP) (SMB/NetBIOS)
 
-OS detection results: The target is running Linux kernel 4.15 - 5.19,
-classified as a general purpose device/router. The system has been up
-for approximately 23.6 days (since January 25, 2026). Service Info
-confirms the hostname is INCS-745-LAB-SERVER running Unix/Linux.
+For OS detection, Nmap identified the target as Linux kernel 4.15 - 5.19
+and categorized it as a general purpose device/router. The reported
+uptime was about 23.6 days, beginning on January 25, 2026. The Service
+Info section also confirmed the hostname INCS-745-LAB-SERVER and showed
+the system type as Unix/Linux.
 
-The scan completed in 13.25 seconds, sending 223 raw packets (10.606KB)
-and receiving 215 packets (9.298KB). The detailed version information is
-critical for exploitation planning, as specific versions can be
-cross-referenced with CVE databases.
-
-{width="6.4in"
-height="3.1418186789151354in"}
-
-*Figure 12: OS and service detection scan command and progress*
+This focused scan completed in 13.25 seconds, with 223 raw packets sent
+(10.606KB) and 215 packets received (9.298KB). The version information
+is useful for exploitation planning because the exact software versions
+can be compared with entries in CVE databases.
 
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 13: OS and service detection results*
+*Figure 12: OS and service detection scan command with progress output*
 
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 14: Output file (xiaoxiao_nmap_33.txt) showing full results*
+*Figure 13: Results from the OS and service version scan*
+
+{width="6.4in"
+height="3.1418186789151354in"}
+
+*Figure 14: Saved output file xiaoxiao_nmap_33.txt with the full scan
+results*
 
 3.  **Task 5**
 
