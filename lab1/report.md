@@ -516,36 +516,39 @@ protection when a comprehensive port scan is performed.
 
 **Security Mitigations**
 
-The following security measures would prevent or mitigate this type of
-attack:
+The risk demonstrated in this lab could be reduced through the following
+controls:
 
-1\. Patch Management: Update MySQL to a version not affected by
-CVE-2012-2122. The vulnerability was fixed in MySQL 5.1.63, 5.5.25, and
-5.6.7.
+1\. Patch Management: MySQL should be upgraded to a release that is not
+affected by CVE-2012-2122. This vulnerability was corrected in MySQL
+5.1.63, 5.5.25, and 5.6.7.
 
-2\. Strong Password Policy: Enforce complex passwords for all database
-accounts. The root password \"123456\" would be rejected by any
-reasonable password policy.
+2\. Strong Password Policy: Database accounts should be required to use
+complex passwords. A weak root password such as \"123456\" should be
+rejected by an effective password policy.
 
-3\. Restrict Remote Access: Disable remote root login by configuring the
-MySQL user table to only allow root connections from localhost. Use
-\"bind-address = 127.0.0.1\" in MySQL configuration.
+3\. Restrict Remote Access: Remote login for the MySQL root account
+should be disabled. The MySQL user table should restrict root access to
+localhost, and the MySQL configuration should use \"bind-address =
+127.0.0.1\" where appropriate.
 
-4\. Hash Stored Passwords: Never store user passwords in plaintext. Use
-strong hashing algorithms (bcrypt, Argon2) with unique salts for each
-password.
+4\. Hash Stored Passwords: User passwords should not be stored in
+plaintext. Strong password hashing methods, such as bcrypt or Argon2,
+should be applied with a unique salt for each password.
 
-5\. Network Segmentation and Firewall Rules: Implement firewall rules to
-restrict database access to only authorized application servers. Do not
-expose database ports to the entire network.
+5\. Network Segmentation and Firewall Rules: Database access should be
+limited to authorized application servers through firewall rules and
+network segmentation. Database ports should not be exposed to the entire
+network.
 
-6\. Deploy IDS/IPS: Intrusion Detection/Prevention Systems can detect
-and block repeated authentication attempts characteristic of the
-CVE-2012-2122 exploit (130 rapid login attempts).
+6\. Deploy IDS/IPS: Intrusion Detection and Prevention Systems can help
+identify and block the repeated login attempts associated with the
+CVE-2012-2122 exploit, such as the 130 rapid authentication attempts
+observed in this lab.
 
-7\. Database Activity Monitoring: Implement logging and monitoring of
-all database queries, especially those accessing sensitive tables, to
-detect unauthorized data exfiltration.
+7\. Database Activity Monitoring: Database logging and query monitoring
+should be enabled, especially for access to sensitive tables, so that
+unauthorized data extraction can be detected.
 
 IV. **CONCLUSION**
 
