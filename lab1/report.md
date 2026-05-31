@@ -294,35 +294,37 @@ III. **Exploitation: MySQL Authentication Bypass (CVE-2012-2122)**
 
 **Target Selection**
 
-Based on the reconnaissance findings, I chose to exploit the MySQL
-database vulnerability. The full port scan revealed two MySQL instances
-running on ports 3306 and 3307. According to the lab instructions, only
-one MySQL service is vulnerable, and a \"silly mistake\" allows MySQL to
-sometimes accept incorrect passwords.
+The reconnaissance results showed that MySQL was a suitable target for
+the exploitation stage. The complete port scan found two MySQL services
+on the server, one on port 3306 and another on port 3307. The lab notes
+state that only one of these services is affected by the vulnerability,
+and that a \"silly mistake\" can cause MySQL to accept a wrong password in
+some cases.
 
-This description matches CVE-2012-2122, a known authentication bypass
-vulnerability in MySQL/MariaDB versions 5.1.x through 5.5.x. Due to
-improper casting of the memcmp() return value, approximately 1 in every
-256 login attempts with an incorrect password will be incorrectly
-accepted as valid.
+That behavior is consistent with CVE-2012-2122, an authentication bypass
+issue affecting MySQL/MariaDB versions 5.1.x through 5.5.x. The problem
+comes from incorrect casting of the return value from memcmp(). As a
+result, about 1 out of 256 login attempts using an invalid password may
+be treated as a successful login.
 
 **Step 1: Launch Metasploit Framework**
 
 **Command:** msfconsole
 
-Metasploit Framework v6.4.22-dev was launched with 2441 exploits, 1256
+Metasploit was started with the msfconsole command. The console loaded
+Metasploit Framework v6.4.22-dev and showed 2441 exploits, 1256
 auxiliary modules, 429 post-exploitation modules, 1468 payloads, 47
 encoders, 11 nops, and 9 evasion modules available.
 
 {width="5.929413823272091in"
 height="2.910803805774278in"}
 
-*Figure 16: Launching Metasploit Framework*
+*Figure 16: Starting the Metasploit Framework console*
 
 {width="5.964003718285214in"
 height="2.9277843394575678in"}
 
-*Figure 17: Metasploit Framework ready (msf6 prompt)*
+*Figure 17: Metasploit loaded and showing the msf6 prompt*
 
 **Step 2: Select and Configure the Exploit Module**
 
@@ -330,15 +332,18 @@ height="2.9277843394575678in"}
 
 show options
 
-The mysql_authbypass_hashdump module is designed to exploit
-CVE-2012-2122. The module options show: RHOSTS (target host, required),
-RPORT (target port, default 3306), THREADS (concurrent threads, default
-1), and USERNAME (authentication username, default root).
+The mysql_authbypass_hashdump auxiliary module was selected because it
+targets CVE-2012-2122. After the module was loaded, its settings were
+reviewed with show options. The required target host is set through
+RHOSTS, while RPORT controls the target port and defaults to 3306. The
+THREADS option sets the number of concurrent threads and defaults to 1,
+and USERNAME is the login name used for the test, with root as the
+default value.
 
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 18: Module options for mysql_authbypass_hashdump*
+*Figure 18: Options displayed for the mysql_authbypass_hashdump module*
 
 **Step 3: Test Port 3306 (Not Vulnerable)**
 
@@ -348,16 +353,17 @@ height="3.1418186789151354in"}
 >
 > **run**
 
-The module attempted to connect to MySQL on port 3306 but received the
-error: \"Unable to login from this host due to policy (may still be
-vulnerable)\". The MySQL instance on port 3306 rejected connections
-based on host-based access policy, making it not exploitable from our
-position.
+The module was first configured to target MySQL on port 3306. When the
+module ran, Metasploit returned the error message: \"Unable to login from
+this host due to policy (may still be vulnerable)\". This indicates that
+the MySQL service on port 3306 blocked the connection because of a
+host-based access policy. From the Student VM, this instance could not be
+exploited.
 
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 19: Port 3306 - connection rejected by policy*
+*Figure 19: Port 3306 test showing rejection by access policy*
 
 **Step 4: Exploit Port 3307 (Vulnerable Instance)**
 
@@ -365,7 +371,8 @@ height="3.1418186789151354in"}
 >
 > **run**
 
-The module successfully exploited the MySQL instance on port 3307:
+Next, the target port was changed to 3307 and the module was run again.
+This time, the MySQL instance was successfully exploited:
 
 *\"The server allows logins, proceeding with bypass test\"*
 
@@ -374,18 +381,19 @@ The module successfully exploited the MySQL instance on port 3307:
 *\"Successfully exploited the authentication bypass flaw, dumping
 hashes\...\"*
 
-The module obtained the root user\'s password hash:
+After the authentication bypass worked, the module dumped the password
+hash for the root user:
 
 > **root:\*6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9**
 
-The hash was saved to:
+Metasploit also saved the recovered hash to the following loot file:
 /home/student/.msf4/loot/20260217204919_default_10.0.9.4_mysql.hashes_505628.txt
 
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 20: Successfully bypassed MySQL authentication and dumped
-password hashes*
+*Figure 20: Successful MySQL authentication bypass with dumped password
+hashes*
 
 **Step 5: Crack the Password Hash with hashcat**
 
