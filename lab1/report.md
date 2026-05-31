@@ -397,20 +397,21 @@ hashes*
 
 **Step 5: Crack the Password Hash with hashcat**
 
-The obtained hash is in MySQL SHA1 format (indicated by the \* prefix).
-Hashcat mode 300 is used for MySQL 4.1+ SHA1 hashes. The rockyou.txt
-wordlist was located at /home/student/Desktop/Garbage/rockyou.txt using
-the find command.
+The extracted hash uses the MySQL SHA1 format, which is indicated by the
+\* prefix. For MySQL 4.1 and later SHA1 hashes, hashcat mode 300 is the
+appropriate cracking mode. The rockyou.txt wordlist was found at
+/home/student/Desktop/Garbage/rockyou.txt by using the find command.
 
 > **find / -name \"rockyou\*\" 2\>/dev/null**
 
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 21: Locating rockyou.txt wordlist*
+*Figure 21: Location of the rockyou.txt wordlist*
 
-The hash was saved to a file (removing the \* prefix required by hashcat
-mode 300) and cracked:
+Before running hashcat, the hash value was written to a separate file.
+The \* prefix was removed because hashcat mode 300 expects the hash
+without that character:
 
 > **echo \'6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9\' \> hash.txt**
 >
@@ -422,56 +423,57 @@ mode 300) and cracked:
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 22: hashcat successfully cracked the hash*
+*Figure 22: hashcat output showing the hash was cracked*
 
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 23: hashcat \--show reveals password: 123456*
+*Figure 23: hashcat \--show output displaying the password 123456*
 
 **Cracked Password: 123456**
 
-The root password \"123456\" is one of the most commonly used passwords
-worldwide, further demonstrating the poor security practices on this
-server.
+The recovered root password was \"123456\". This password is widely known
+as a very common weak password, which further indicates poor security
+practice on the server.
 
 **Step 6: Login to MySQL and Extract Data**
 
 > **mysql -h 10.0.9.4 -P 3307 -u root -p**
 
-After entering the cracked password \"123456\", I successfully logged
-into the MySQL server (version 5.5.23 Source distribution). The
-following SQL commands were used to enumerate and extract data:
+Using the recovered password \"123456\", access was obtained to the MySQL
+server running version 5.5.23 Source distribution. The following SQL
+commands were then used to enumerate the database contents and extract
+data:
 
 > **SHOW DATABASES;**
 
-Four databases were found: information_schema, mysql,
+The server returned four databases: information_schema, mysql,
 performance_schema, and test.
 
 > **USE test;**
 >
 > **SHOW TABLES;**
 
-The test database contains one table: users.
+Inside the test database, one table was identified: users.
 
 > **SELECT \* FROM users;**
 
 {width="6.114358048993876in"
 height="3.0015944881889762in"}
 
-*Figure 24: Successfully logged into MySQL with cracked password*
+*Figure 24: MySQL login using the cracked root password*
 
 {width="6.168353018372703in"
 height="3.0281003937007873in"}
 
-*Figure 25: SHOW DATABASES and USE test*
+*Figure 25: Database enumeration using SHOW DATABASES and USE test*
 
 {width="6.15361220472441in"
 height="3.020863954505687in"}
 
-*Figure 26: SELECT \* FROM users - admin password discovered*
+*Figure 26: Querying the users table and identifying the admin password*
 
-Data retrieved from the test.users table:
+The following records were retrieved from the test.users table:
 
 user1 - password: 123456
 
@@ -479,37 +481,38 @@ user2 - password: qwerty
 
 admin - password: nyit2025
 
-**Goal Achieved:** The admin user\'s password is \"nyit2025\".
+**Goal Achieved:** The password for the admin user is \"nyit2025\".
 
 **Why the Attack Worked**
 
-The attack succeeded due to a combination of vulnerabilities and
-misconfigurations:
+The exploitation was successful because several weaknesses were present
+at the same time:
 
-1\. CVE-2012-2122 Authentication Bypass: The MySQL server on port 3307
-was running MySQL version 5.5.23, which contains a critical
-authentication bypass vulnerability. The memcmp() function used for
-password comparison returns a value that is cast to a single byte,
-causing approximately 1 in 256 authentication attempts to succeed
-regardless of the password provided. Our attack succeeded after 130
-attempts.
+1\. CVE-2012-2122 Authentication Bypass: The MySQL service on port 3307
+was running MySQL version 5.5.23, a version affected by a critical
+authentication bypass issue. The password comparison relies on memcmp(),
+and its return value is cast to a single byte. Because of this behavior,
+approximately 1 out of every 256 authentication attempts can succeed even
+when the supplied password is incorrect. In this case, authentication was
+bypassed after 130 attempts.
 
-2\. Weak Root Password: The MySQL root account was protected with the
-password \"123456\", which is trivially crackable using any standard
+2\. Weak Root Password: The MySQL root account used the password
+\"123456\". This type of password can be cracked easily with a common
 wordlist such as rockyou.txt.
 
-3\. Remote Root Access Enabled: The MySQL server was configured to allow
-remote root login, which should be disabled in production environments.
+3\. Remote Root Access Enabled: The MySQL server allowed root login from
+a remote host. In production environments, remote access for the root
+database account should be disabled.
 
-4\. Sensitive Data Stored in Plaintext: User credentials in the
-test.users table were stored as plaintext rather than being properly
-hashed, allowing immediate access to all user passwords once database
-access was obtained.
+4\. Sensitive Data Stored in Plaintext: The credentials in the
+test.users table were stored in plaintext instead of being properly
+hashed. As a result, all user passwords were immediately readable after
+database access was gained.
 
-5\. Non-Standard Port Provided False Security: Running MySQL on port
-3307 instead of the default 3306 is a form of \"security through
-obscurity\" which provides no real protection against a comprehensive
-port scan.
+5\. Non-Standard Port Provided False Security: The vulnerable MySQL
+service was placed on port 3307 rather than the default port 3306. This
+is an example of \"security through obscurity\" and does not provide real
+protection when a comprehensive port scan is performed.
 
 **Security Mitigations**
 
