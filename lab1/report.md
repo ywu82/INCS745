@@ -1,24 +1,24 @@
 I.  **INTRODUCTION**
 
-This lab centers on conducting network reconnaissance with Nmap and
-exploiting vulnerable services within a controlled virtual environment.
-Its goals are to identify live hosts on the network, enumerate open
-ports and active services, gather operating system details, and
-ultimately leverage a vulnerable MySQL service to retrieve sensitive
-information from the database.
+This lab involves using Nmap for network reconnaissance and working with
+vulnerable services inside a controlled virtual environment. The purpose
+is to locate live hosts on the network, list their open ports and active
+services, obtain operating system details, and finally use a vulnerable
+MySQL service to retrieve sensitive information from the database.
 
-The lab environment consists of two virtual machines connected through a
-VirtualBox NAT network on the 10.0.9.0/24 subnet: a student virtual
-machine serving as the attacking machine with the IP address 10.0.9.5,
-and a server virtual machine serving as the target machine with the IP
-address 10.0.9.4 and the hostname INCS-745-LAB-SERVER. All operations
-are performed on the student virtual machine to simulate a real-world
+The lab is set up with two virtual machines connected through a
+VirtualBox NAT network on the 10.0.9.0/24 subnet. The student virtual
+machine is the attacking machine, and its IP address is 10.0.9.5. The
+server virtual machine is the target machine, with the IP address
+10.0.9.4 and the hostname INCS-745-LAB-SERVER. All operations are
+performed from the student virtual machine, which simulates a real-world
 penetration testing scenario.
 
-The tools employed in this lab include Nmap for network scanning and
-reconnaissance, Wireshark for capturing and analyzing network traffic,
-the Metasploit Framework for carrying out exploitation, and hashcat for
-password hash cracking.
+The tools used in this lab are Nmap, Wireshark, the Metasploit
+Framework, and hashcat. Nmap is used for network scanning and
+reconnaissance, Wireshark is used to capture and analyze network traffic,
+the Metasploit Framework is used to carry out exploitation, and hashcat
+is used for password hash cracking.
 
 II. **TASKS for Reconnaissance using Nmap**
 
