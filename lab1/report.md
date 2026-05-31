@@ -261,31 +261,34 @@ results*
 
 **Command:** sudo nmap -p 139 \--script=smb-enum-users.nse 10.0.9.4
 
-The Nmap Scripting Engine (NSE) extends Nmap\'s capabilities with
-specialized scripts. The smb-enum-users.nse script enumerates user
-accounts on the SMB service through port 139 (NetBIOS).
+For this task, I used the Nmap Scripting Engine, or NSE, to run a script
+against the SMB-related service. NSE allows Nmap to perform checks that
+go beyond basic port scanning. In this case, the smb-enum-users.nse
+script was used on port 139, the NetBIOS port, to list user accounts
+available through the SMB service.
 
-The script successfully discovered one user account:
+The script returned one user account from the target:
 
 Username: INCS-745-LAB-SERVER\\smb-user (RID: 1000)
 
 Account Type: Normal user account
 
-A significant finding was that the user account\'s Full Name field
-contained a hidden flag:
+The important result was found in the Full Name field for that account.
+Instead of only showing normal profile information, the field contained
+the hidden flag:
 \[SMB-FLAG\]ZwP6yQ6o8VNR3k7sajd1AnHAg8x2A4uX5fCWaNVSKCGtnk0/TL+dgtliPZctF69HeR/EyjDxJGriNW+WnhABo6m2CZ7vpGHHZO55TmxpfPnE5Wtg1SjDny3GFjkS6Xi7FCAEnuA057kBaMAIztL89RBtzu6JqSCxNhUMH2KmUfw=\[FLAG
 ENDS\]
 
-This demonstrates how NSE scripts can reveal sensitive information
-hidden in user profile attributes. In a real penetration test, such data
-could contain credentials, internal notes, or other valuable
-intelligence that system administrators may not realize is exposed.
+This result shows that NSE scripts can uncover sensitive data stored in
+user profile attributes. In an actual penetration test, exposed profile
+fields like this could include credentials, internal comments, or other
+useful information that administrators may not realize is visible.
 
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 15: NSE smb-enum-users script results showing SMB user with
-hidden flag*
+*Figure 15: smb-enum-users NSE output showing the SMB user and hidden
+flag*
 
 III. **Exploitation: MySQL Authentication Bypass (CVE-2012-2122)**
 
