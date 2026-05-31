@@ -24,49 +24,50 @@ II. **TASKS for Reconnaissance using Nmap**
 
 **1. Task 1**
 
-In this task, I verified the lab environment by checking the Student
-VM\'s IP address using the ifconfig command and confirming the Nmap
-installation with nmap \--version.
+For this task, I first checked that the lab setup was ready to use. I
+used the ifconfig command to view the IP address of the Student VM, and
+then used nmap \--version to make sure Nmap was installed.
 
 **Command:** ifconfig
 
-The ifconfig output shows multiple network interfaces including Docker
-bridge interfaces. The relevant interface is enp0s3, which has the IP
-address 10.0.9.5 on the 10.0.9.0/24 subnet, with the VirtualBox MAC
-address 08:00:27:e5:98:90.
+The output from ifconfig lists several network interfaces, including
+Docker bridge interfaces. The interface needed for this lab is enp0s3.
+It is assigned the IP address 10.0.9.5 in the 10.0.9.0/24 subnet, and
+its VirtualBox MAC address is 08:00:27:e5:98:90.
 
 {width="6.4in"
 height="2.6496391076115486in"}
 
-*Figure 1: ifconfig output showing network interfaces*
+*Figure 1: ifconfig output listing the network interfaces*
 
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 2: ifconfig output showing enp0s3 interface with IP 10.0.9.5*
+*Figure 2: ifconfig output showing enp0s3 with IP address 10.0.9.5*
 
 **Command:** nmap \--version
 
-Nmap version 7.95 is confirmed installed on the Student VM, running on
-the x86_64-unknown-linux-gnu platform.
+The command confirms that Nmap version 7.95 is installed on the Student
+VM and is running on the x86_64-unknown-linux-gnu platform.
 
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 3: Nmap version 7.95 confirmed*
+*Figure 3: Output confirming Nmap version 7.95*
 
 1.  **Task 2**
 
-Host discovery was performed to identify all active hosts on the
-10.0.9.0/24 network and locate the target Server VM.
+I performed host discovery to find the active systems on the
+10.0.9.0/24 network and determine which one was the target Server VM.
 
 **Command:** sudo nmap -sn 10.0.9.0/24
 
-The -sn flag performs a Ping Scan (host discovery only, no port
-scanning). The CIDR notation /24 scans all 256 addresses in the subnet.
-The scan discovered 5 active hosts in 2.09 seconds:
+The -sn option runs a Ping Scan, meaning Nmap only checks host
+availability and does not scan ports. The /24 CIDR notation covers all
+256 addresses in the subnet. This scan found 5 active hosts in 2.09
+seconds:
 
-10.0.9.1 - Gateway (QEMU virtual NIC, labeled \_gateway)
+10.0.9.1 - Gateway (QEMU virtual NIC, shown as \_gateway)
 
 10.0.9.2 - VirtualBox DHCP server (QEMU virtual NIC)
 
@@ -75,26 +76,25 @@ The scan discovered 5 active hosts in 2.09 seconds:
 10.0.9.4 - Target Server VM (Oracle VirtualBox NIC, MAC
 08:00:27:D1:B0:6B)
 
-10.0.9.5 - Student VM / self (hostname INCS-745-Lab-Student)
+10.0.9.5 - Student VM / local machine (hostname INCS-745-Lab-Student)
 
 {width="6.4in"
 height="3.1418186789151354in"}{width="1.3459328521434821in"
 height="0.11610017497812773in"}
 
-*Figure 4: Host discovery scan showing 5 active hosts*
+*Figure 4: Host discovery result showing 5 active hosts*
 
-To confirm which VirtualBox VM (10.0.9.3 or 10.0.9.4) is the target
-server, I ran a quick
-port scan against both 10.0.9.3 and 10.0.9.4. The results clearly
-show that 10.0.9.3 has all ports filtered while 10.0.9.4 has multiple
-open services (ssh, http, netbios-ssn, microsoft-ds, mysql), confirming
-10.0.9.4 as the target.
+To verify which VirtualBox machine was the target server, I ran a quick
+port scan against both 10.0.9.3 and 10.0.9.4. The scan showed that all
+ports on 10.0.9.3 were filtered. In contrast, 10.0.9.4 had several open
+services, including ssh, http, netbios-ssn, microsoft-ds, and mysql.
+This confirmed that 10.0.9.4 was the target.
 
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 5: Quick scan comparing 10.0.9.3 (filtered) vs 10.0.9.4 (open
-ports)*
+*Figure 5: Quick scan comparison of 10.0.9.3 with filtered ports and
+10.0.9.4 with open ports*
 
 2.  **Task 3**
 
