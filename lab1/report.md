@@ -7,10 +7,10 @@ services, obtain operating system details, and finally use a vulnerable
 MySQL service to retrieve sensitive information from the database.
 
 The lab is set up with two virtual machines connected through a
-VirtualBox NAT network on the 10.0.9.0/24 subnet. The student virtual
-machine is the attacking machine, and its IP address is 10.0.9.5. The
+VirtualBox NAT network on the 10.0.2.0/24 subnet. The student virtual
+machine is the attacking machine, and its IP address is 10.0.2.3. The
 server virtual machine is the target machine, with the IP address
-10.0.9.4 and the hostname INCS-745-LAB-SERVER. All operations are
+10.0.2.4 and the hostname INCS-745-LAB-SERVER. All operations are
 performed from the student virtual machine, which simulates a real-world
 penetration testing scenario.
 
@@ -32,7 +32,7 @@ then used nmap \--version to make sure Nmap was installed.
 
 The output from ifconfig lists several network interfaces, including
 Docker bridge interfaces. The interface needed for this lab is enp0s3.
-It is assigned the IP address 10.0.9.5 in the 10.0.9.0/24 subnet, and
+It is assigned the IP address 10.0.2.3 in the 10.0.2.0/24 subnet, and
 its VirtualBox MAC address is 08:00:27:e5:98:90.
 
 {width="6.4in"
@@ -43,7 +43,7 @@ height="2.6496391076115486in"}
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 2: ifconfig output showing enp0s3 with IP address 10.0.9.5*
+*Figure 2: ifconfig output showing enp0s3 with IP address 10.0.2.3*
 
 **Command:** nmap \--version
 
@@ -58,25 +58,23 @@ height="3.1418186789151354in"}
 1.  **Task 2**
 
 I performed host discovery to find the active systems on the
-10.0.9.0/24 network and determine which one was the target Server VM.
+10.0.2.0/24 network and determine which one was the target Server VM.
 
-**Command:** sudo nmap -sn 10.0.9.0/24
+**Command:** sudo nmap -sn 10.0.2.0/24
 
 The -sn option runs a Ping Scan, meaning Nmap only checks host
 availability and does not scan ports. The /24 CIDR notation covers all
 256 addresses in the subnet. This scan found 5 active hosts in 2.09
 seconds:
 
-10.0.9.1 - Gateway (QEMU virtual NIC, shown as \_gateway)
+10.0.2.1 - Gateway (QEMU virtual NIC, shown as \_gateway)
 
-10.0.9.2 - VirtualBox DHCP server (QEMU virtual NIC)
+10.0.2.2 - VirtualBox NAT/DHCP/DNS
 
-10.0.9.3 - Unknown VM (Oracle VirtualBox NIC, MAC 08:00:27:F9:9C:F4)
+10.0.2.3 - Student VM / local machine (hostname INCS-745-Lab-Student)
 
-10.0.9.4 - Target Server VM (Oracle VirtualBox NIC, MAC
+10.0.2.4 - Target Server VM (Oracle VirtualBox NIC, MAC
 08:00:27:D1:B0:6B)
-
-10.0.9.5 - Student VM / local machine (hostname INCS-745-Lab-Student)
 
 {width="6.4in"
 height="3.1418186789151354in"}{width="1.3459328521434821in"
@@ -85,24 +83,24 @@ height="0.11610017497812773in"}
 *Figure 4: Host discovery result showing 5 active hosts*
 
 To verify which VirtualBox machine was the target server, I ran a quick
-port scan against both 10.0.9.3 and 10.0.9.4. The scan showed that all
-ports on 10.0.9.3 were filtered. In contrast, 10.0.9.4 had several open
+port scan against both 10.0.2.2 and 10.0.2.4. The scan showed that all
+ports on 10.0.2.2 were filtered. In contrast, 10.0.2.4 had several open
 services, including ssh, http, netbios-ssn, microsoft-ds, and mysql.
-This confirmed that 10.0.9.4 was the target.
+This confirmed that 10.0.2.4 was the target.
 
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 5: Quick scan comparison of 10.0.9.3 with filtered ports and
-10.0.9.4 with open ports*
+*Figure 5: Quick scan comparison of 10.0.2.2 with filtered ports and
+10.0.2.4 with open ports*
 
 2.  **Task 3**
 
-Once 10.0.9.4 had been identified as the target, I started with a basic
+Once 10.0.2.4 had been identified as the target, I started with a basic
 Nmap scan. This scan was used to get an initial view of the services that
 were exposed on commonly scanned ports.
 
-**Command:** sudo nmap 10.0.9.4
+**Command:** sudo nmap 10.0.2.4
 
 With no extra port options, Nmap checks its default set of the top 1000
 ports. The result showed 8 open TCP ports on the target: 21 (ftp), 22
@@ -113,7 +111,7 @@ set were closed. The scan took 0.45 seconds.
 {width="6.4in"
 height="3.1418186789151354in"}
 
-*Figure 6: Initial Nmap scan showing 8 open ports on 10.0.9.4*
+*Figure 6: Initial Nmap scan showing 8 open ports on 10.0.2.4*
 
 Note: This first scan did not cover every possible port. Because it only
 checked the top 1000 ports, services listening on 1139, 1445, and 3307
@@ -124,7 +122,7 @@ to avoid missing those non-standard services.
 
 **SYN Stealth Scan (Full Port Range)**
 
-**Command:** sudo nmap -sS -p- -v 10.0.9.4
+**Command:** sudo nmap -sS -p- -v 10.0.2.4
 
 For the full-range scan, I used the SYN scan mode with -sS. In this
 mode, Nmap sends a SYN packet and does not finish the full TCP
@@ -158,7 +156,7 @@ height="3.1418186789151354in"}
 
 **TCP Connect Scan (Ports 1-20)**
 
-**Command:** sudo nmap -sT -p 1-20 -v 10.0.9.4
+**Command:** sudo nmap -sT -p 1-20 -v 10.0.2.4
 
 I also tested a TCP connect scan with -sT against ports 1-20. Unlike the
 SYN scan, this method completes the connection process with SYN,
@@ -181,7 +179,7 @@ height="3.1418186789151354in"}
 **Wireshark Packet Capture Analysis**
 
 To review the packet-level behavior, I opened the capture in Wireshark
-and applied the filter \"port == 80 && ip.addr == 10.0.9.4\". This made
+and applied the filter \"port == 80 && ip.addr == 10.0.2.4\". This made
 it easier to focus on traffic between the Student VM and the target
 during the scan.
 
@@ -200,7 +198,7 @@ easily.
 The capture also contained HTTP traffic from 91.189.91.98. That traffic
 was not part of the scan; it appears to be Ubuntu update traffic from the
 target server. For the selected RST packet, Wireshark shows 54 bytes on
-wire. The packet was sent from 10.0.9.5 to 10.0.9.4, using TCP source
+wire. The packet was sent from 10.0.2.3 to 10.0.2.4, using TCP source
 port 43263 and destination port 80.
 
 {width="6.4in"
@@ -211,7 +209,7 @@ height="3.1418186789151354in"}
 **Task 3.2: Focused Scanning (OS and Service Detection)**
 
 **Command:** sudo nmap -p 1-200 -O -sV -v -oN xiaoxiao_nmap_33.txt
-10.0.9.4
+10.0.2.4
 
 The next scan narrowed the port range to 1-200 and added options for
 more detailed identification. The -O option attempts OS detection, -sV
@@ -259,7 +257,7 @@ results*
 
 3.  **Task 5**
 
-**Command:** sudo nmap -p 139 \--script=smb-enum-users.nse 10.0.9.4
+**Command:** sudo nmap -p 139 \--script=smb-enum-users.nse 10.0.2.4
 
 For this task, I used the Nmap Scripting Engine, or NSE, to run a script
 against the SMB-related service. NSE allows Nmap to perform checks that
@@ -347,7 +345,7 @@ height="3.1418186789151354in"}
 
 **Step 3: Test Port 3306 (Not Vulnerable)**
 
-> **set RHOSTS 10.0.9.4**
+> **set RHOSTS 10.0.2.4**
 >
 > **set RPORT 3306**
 >
@@ -387,7 +385,7 @@ hash for the root user:
 > **root:\*6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9**
 
 Metasploit also saved the recovered hash to the following loot file:
-/home/student/.msf4/loot/20260217204919_default_10.0.9.4_mysql.hashes_505628.txt
+/home/student/.msf4/loot/20260217204919_default_10.0.2.4_mysql.hashes_505628.txt
 
 {width="6.4in"
 height="3.1418186789151354in"}
@@ -438,7 +436,7 @@ practice on the server.
 
 **Step 6: Login to MySQL and Extract Data**
 
-> **mysql -h 10.0.9.4 -P 3307 -u root -p**
+> **mysql -h 10.0.2.4 -P 3307 -u root -p**
 
 Using the recovered password \"123456\", access was obtained to the MySQL
 server running version 5.5.23 Source distribution. The following SQL
